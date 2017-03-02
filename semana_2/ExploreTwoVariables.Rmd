@@ -1,0 +1,53 @@
+---
+title: "Explore Two Variables"
+output: html_document
+---
+
+Video: Scatterplots - Overplotting
+```{r}
+library(ggplot2)
+pseudo_face <- read.csv('pseudo_facebook.tsv', sep = '\t')
+
+# O qplot cria uma gráfico de dispersão automático quando passo duas variáveis
+qplot(x=age, y=friend_count, data=pseudo_face)
+names(pseudo_face)
+
+# Na sintaxe do ggplot
+# O 'geom_point' é para dizer que quero um gráfico de dispersão 
+# O 'alpha' é usado para definir a transparência dos pontos
+# O 'alpha' e o 'jitter' são usados para diminuir o excesso de dispersão
+ggplot(aes(x=age, y=friend_count), data = pseudo_face) + 
+  geom_point(alpha = 1/20) + xlim(13, 90)
+
+# Posso usar também geom_jitter (bom para ver concentrações)
+ggplot(aes(x=age, y=friend_count), data = pseudo_face) + 
+  geom_jitter(alpha = 1/20) + xlim(13, 90)
+
+# Para descobrir os limites superior e inferior
+summary(pseudo_face$age)
+```
+
+Video: coord_trans
+```{r}
+# Modificando o eixo y
+plot <- ggplot(aes(x=age, y=friend_count), data = pseudo_face) + 
+  geom_point(alpha = 1/20) + xlim(13, 90)
+  
+plot + coord_trans(y = "sqrt")
+
+```
+
+Video: Alpha and Jitter
+```{r}
+# Vendo a relação entre amizades inicializadas e a idade dos usuários
+plot <- ggplot(aes(x=age, y=friendships_initiated), data = pseudo_face) + 
+  geom_point()
+  
+plot 
+```
+
+Video: Conditional Means
+```{r}
+# Quero entender como a média ou a mediana de uma variável se comportam em relação a outra variável
+
+```
