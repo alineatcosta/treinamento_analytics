@@ -1,0 +1,91 @@
+Quiz: price vs. x
+```{r}
+library(ggplot2)
+data(diamonds)
+
+# Criar um Scatterplot de preço vs x
+ggplot(aes(x=x, y=price), data = diamonds) + 
+  geom_point()
+```
+
+Quiz: Correlations
+```{r}
+# A correlação entre price e x
+cor.test(diamonds$price, diamonds$x)
+
+# A correlação entre price e z
+cor.test(diamonds$price, diamonds$z)
+```
+
+Quiz: price vs. depth
+```{r}
+# Criar um Scatterplot entre price vs. depth
+ggplot(aes(x=depth, y=price), data = diamonds) +
+  geom_point()
+```
+
+Quiz: Adjustments - price vs. depth
+```{r}
+# Ajustando a transparência em 1/100 e o eixo x a cada 2 unidades
+ggplot(aes(x=depth, y=price), data = diamonds) +
+  geom_point(alpha=1/100) +
+  scale_x_continuous(breaks=seq(0, 70, 2))
+```
+
+Quiz: Correlation - price and depth
+```{r}
+cor.test(diamonds$price, diamonds$depth)
+```
+
+Quiz: price vs. carat
+```{r}
+# Criar um Scatterplot entre price vs. carat
+# omitting the top 1% of price and carat values.
+ggplot(aes(x=carat, y=price), data = diamonds) +
+  geom_line(stat = 'summary', fun.y = quantile, probs=.95, color='blue')
+```
+
+Quiz: price vs. carat
+```{r}
+# Create a scatterplot of price vs. volume (x * y * z).
+
+# Create a new variable for volume in the diamonds data frame.
+diamonds$volume <- diamonds$x * diamonds$y * diamonds$z
+ggplot(aes(x=volume, y=price), data = diamonds) +
+  geom_line()
+
+# Você pode descobrir quantos diamantes têm 0 volume usando count(diamonds$volume == 0) do pacote plyr
+```
+
+Quiz: Correlations on Subsets
+```{r}
+# A correlação entre price e volume, excluindo diamantes de volume = 0 ou volume >= 800
+# É uma correlação com subset
+with(subset(diamonds, volume <= 800), cor.test(price, volume))
+```
+
+Quiz: Adjustments - price vs. volume
+```{r}
+# Subset the data to exclude diamonds with a volume
+# greater than or equal to 800. Also, exclude diamonds
+# with a volume of 0. Adjust the transparency of the
+# points and add a linear model to the plot. (See the
+# Instructor Notes or look up the documentation of
+# geom_smooth() for more details about smoothers.)
+
+# We encourage you to think about this next question and
+# to post your thoughts in the discussion section.
+
+# Do you think this would be a useful model to estimate
+# the price of diamonds? Why or why not?
+
+ggplot(aes(x=volume, y=price), data = subset(diamonds, volume <= 800)) +
+  geom_point(alpha=1/100) +
+  geom_smooth(method = 'lm', color='pink')
+```
+
+Quiz: Mean Price by Clarity
+```{r}
+
+```
+
