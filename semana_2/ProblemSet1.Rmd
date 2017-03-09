@@ -84,8 +84,60 @@ ggplot(aes(x=volume, y=price), data = subset(diamonds, volume <= 800)) +
   geom_smooth(method = 'lm', color='pink')
 ```
 
-Quiz: Mean Price by Clarity
+Video: Mean Price by Clarity
 ```{r}
+# Use the function dplyr package
+# to create a new data frame containing
+# info on diamonds by clarity.
 
+suppressMessages(library(ggplot2))
+suppressMessages(library(dplyr))
+data(diamonds)
+
+# Name the data frame diamondsByClarity
+
+diamondsByClarity <- group_by(diamonds, clarity)
+
+The data frame should contain the following
+# variables in this order.
+
+#       (1) mean_price
+#       (2) median_price
+#       (3) min_price
+#       (4) max_price
+#       (5) n
+
+# where n is the number of diamonds in each
+# level of clarity.
+
+new_data_set <- summarise(diamondsByClarity,
+          mean = mean(price),
+          median = median(price),
+          min_price = min(price),
+          max_price = max(price),
+          n = n())
+
+# Para ordenar a exibição
+new_data_set <- arrange(new_data_set, clarity)
+
+head(new_data_set)
 ```
+
+Video: Bar Charts of Mean Price
+```{r}
+# DO NOT DELETE THE LINES OF CODE BELOW
+# ===================================================================
+data(diamonds)
+library(dplyr)
+
+diamonds_by_clarity <- group_by(diamonds, clarity)
+diamonds_mp_by_clarity <- summarise(diamonds_by_clarity, mean_price = mean(price))
+
+diamonds_by_color <- group_by(diamonds, color)
+diamonds_mp_by_color <- summarise(diamonds_by_color, mean_price = mean(price))
+
+# create two bar plots on one output image using the grid.arrange() function from the package gridExtra.
+# com o barplot()
+```
+
 

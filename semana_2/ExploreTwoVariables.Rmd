@@ -49,5 +49,144 @@ plot
 Video: Conditional Means
 ```{r}
 # Quero entender como a média ou a mediana de uma variável se comportam em relação a outra variável
+# Resumindo a relação entre duas variáveis
 
+# dlpyR permite dividir uma estrutura de dados e aplicar funções a partes dos dados, ex: filter(), group_by(), mutate() e arrange()
+install.packages('dplyr')
+library(dplyr)
+
+# Agrupando a estrutura de dados por idade
+age_groups <- group_by(pseudo_face, age)
+pseudo_face_by_age <- summarise(age_groups,
+          friend_count_mean = mean(friend_count),
+          friend_count_median = median(friend_count),
+          n = n()) # pega o número de pessoas em cada grupo
+
+# Para ordenar a exibição
+pseudo_face_by_age <- arrange(pseudo_face_by_age, age)
+```
+
+Video: Overlaying
+```{r}
+# Verificando o gráfico feito anteriormente.
+library(ggplot2)
+ggplot(aes(x=age, y=friend_count), data = pseudo_face) + 
+  xlim(13, 90) + geom_point(alpha = 0.05, position=position_jitter(h=0), color='orange') +
+  coord_trans(y='sqrt')
+
+# Agora sobrepondo o resumo anterior
+ggplot(aes(x=age, y=friend_count), data = pseudo_face) + 
+  xlim(13, 90) + geom_point(alpha = 0.05, position=position_jitter(h=0), color='orange') +
+  coord_trans(y='sqrt') +
+  geom_line(stat = 'summary', fun.y = mean) + # Adiciono a contagem média de amigos por idade
+  geom_line(stat = 'summary', fun.y = quantile, probs=.1, linetype=2, color='blue') + # Adiciono a contagem do 1º quantil
+    geom_line(stat = 'summary', fun.y = quantile, probs=.9, linetype=2, color='blue') + # Significado: 90% das pessoas tem contagem de amigos abaixo dessa linha
+    geom_line(stat = 'summary', fun.y = quantile, probs=.5, color='blue') # Adicionando a mediana
+
+```
+
+Video: Correlation
+```{r}
+# Encontrando a correlação entre duas variáveis
+# Usando a função cor.test
+cor.test(pseudo_face$age, pseudo_face$friend_count)
+
+# Conclusão: a correlação não é significativa
+```
+
+Video: Correlation on Subset
+```{r}
+with(subset(pseudo_face, age <= 70), cor.test(age, friend_count))
+```
+
+Video: Create Scatterplots
+```{r}
+# Criar um gráfico de disperssão que relacione as variaveis 'curtidas recebidas' e 'curtidas recebidas no dektop'
+library(ggplot2)
+names(pseudo_face)
+ggplot(aes(x=likes_received, y=www_likes_received), data = pseudo_face) +
+  geom_point()
+```
+
+Video: Strong Correlation
+```{r}
+# Melhorando os limites do gráfico
+ggplot(aes(x=likes_received, y=www_likes_received), data = pseudo_face) +
+  geom_point() +
+  xlim(0, quantile(pseudo_face$www_likes_received, 0.95)) +
+  ylim(0, quantile(pseudo_face$likes_received, 0.95))
+
+# Adicionando a linha de correlação
+ggplot(aes(x=likes_received, y=www_likes_received), data = pseudo_face) +
+  geom_point() +
+  xlim(0, quantile(pseudo_face$www_likes_received, 0.95)) +
+  ylim(0, quantile(pseudo_face$likes_received, 0.95)) +
+  geom_smooth(method = 'lm', color='pink')
+
+# Agora quantificando a correlação
+cor.test(pseudo_face$likes_received, pseudo_face$www_likes_received)
+```
+
+Video: More Caution with Correlation
+```{r}
+install.packages('alr3')
+library(alr3)
+data(Mitchell) # contém temperaturas de uma cidade
+?Mitchell
+names(Mitchell)
+# criar um gráfico de dispersão da temperatura em relação aos meses.
+ggplot(aes(x=Month, y=Temp), data = Mitchell) +
+  geom_point()
+```
+
+Video: Noisy Scatterplots
+```{r}
+# Calculando a correlação
+cor.test(Mitchell$Month, Mitchell$Temp)
+
+```
+
+Video: Noisy Scatterplots
+```{r}
+# Os meses, na verdade, se repetem. Quero limitar o eixo x.
+ggplot(aes(x=Month, y=Temp), data = Mitchell) +
+  geom_point() + 
+  scale_x_discrete(breaks = seq(0, 203, 12))
+```
+
+Video: Understanding Noise
+```{r}
+# Carregamento os dados 
+# Criando uma nova coluna em pseudo_face
+# Uso a idade em meses para tirar o ruido (porque uma mesma idade pode ter valores muito diferentes)
+pseudo_face$age_with_month <- pseudo_face$age + (12 - pseudo_face$dob_month) / 12
+```
+
+Video: Age with month means
+```{r}
+# Criando uma nova coluna
+# com média de friend_count, com mediana de friend_count e o número de usuários em cada grupo etário com meses
+
+# É semelhante ao pseudo_face_by_age, só que quero a idade em meses
+install.packages('dplyr')
+library(dplyr)
+
+# Uso '%.%' para colocar todos os comandos juntos, sem precisar ir salvando em variáveis
+pseudo_face_by_age_months <- pseudo_face %>% # pode dar problemas de reconhecimento nesse símbolo
+          group_by(age_with_month) %>%
+          summarise(friend_count_mean = mean(friend_count),
+          friend_count_median = median(friend_count),
+          n = n()) %>% 
+          arrange(age_with_month)
+```
+
+Video: Noise in Conditional Means
+```{r}
+# Criar o gráfico da média da contagem de amigos versus a idade media em meses, usando geom_line()
+# Também investigar apenas os usuários com idades inferior a 71
+ggplot(aes(x=age_with_month, y=friend_count_mean), data = subset(pseudo_face_by_age_months, age_with_month < 71)) +
+  geom_line()
+
+# Se eu quiser adicionar a linha com um resumo estatístico:
+# geom_line(stat = 'summary', fun.y = mean)
 ```
