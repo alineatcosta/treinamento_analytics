@@ -1,0 +1,263 @@
+Video:
+```{r}
+pseudo_face <- read.csv('pseudo_facebook.tsv', sep = '\t')
+
+library(dplyr)
+# Vou agrupar os dados por gênero e idade
+
+pseudo_face <- subset(pseudo_face, !is.na(gender))
+age_groups <- group_by(pseudo_face, age, gender)
+pseudo_face_by_age_gender <- summarise(age_groups,
+          friend_count_mean = mean(friend_count),
+          friend_count_median = median(friend_count),
+          n = n()) # pega o número de pessoas em cada grupo
+
+# posso acrescentar acima o filter(!is.na(gender))
+# Para ordenar a exibição
+pseudo_face_by_age_gender <- arrange(pseudo_face_by_age_gender, age)
+
+head(pseudo_face_by_age_gender)
+```
+
+Video: Plotting Conditional
+```{r}
+# Plotar um gráfico de contagem de amigos por gênero a medida em que a idade aumenta
+
+ggplot(aes(x = age, y = friend_count_median),
+              data = pseudo_face_by_age_gender) +
+      geom_line(aes(color = gender))
+```
+
+Video: Wide and Long Format
+```{r}
+# Temos os dados no fromato longo (as linhas para feminino e masculino se repetem)
+# Vamos converter eles para o formato amplo, que terá uma linha para cada idade com a mediana de amigos para os sexos
+
+install.packages("tidyr")
+library(tidyr)
+spread(subset(pseudo_face_by_age_gender, select = c('gender', 'age', 'friend_count_median')), gender, friend_count_median)
+```
+
+Video: Reshaping Data
+```{r}
+# O mesmo de cima, mas de outra forma
+install.packages("reshape2")
+library(reshape2)
+
+# Se quisesse um array ou uma matriz eu usaria só 'cast'
+pseudo_face_by_age_gender_wide <- dcast(pseudo_face_by_age_gender, 
+                                        age ~ gender, # a variável que quero manter é 'age' separado por 'gender'
+                                        value.var = 'friend_count_median') # quero a mediana
+
+head(pseudo_face_by_age_gender_wide)
+```
+
+Video: Ratio Plot
+```{r}
+# Determinar quantos amigos as mulheres tem comparadao ao de homens
+# Quantas vezes as mulheres tem de amigos a mais que os homens?
+ggplot(aes(x = age, y = (female/male)), 
+       data = pseudo_face_by_age_gender_wide) + 
+       geom_line() +
+       geom_hline(yintercept = 1, alpha=0.3, linetype=2)
+```
+
+Video: Third Quantitative Variable
+```{r}
+# Explorando 4 variáveis: friend_count, age, gender e tenure.
+
+#Create a variable called year_joined
+# in the pf data frame using the variable
+# tenure and 2014 as the reference year.
+
+# The variable year joined should contain the year
+# that a user joined facebook.
+
+# See the Instructor Notes for three hints if you get
+# stuck. Scroll down slowly to see one hint at a time
+# if you would like some guidance.
+
+# This programming exercise WILL BE automatically graded.
+
+# DO NOT ALTER THE CODE BELOW THIS LINE
+# ========================================================
+pf <- read.delim('/datasets/ud651/pseudo_facebook.tsv')
+
+pseudo_face$year_joined <- floor(2014 - pseudo_face$tenure/365) # arredondando
+```
+
+Video: Cut a Variable
+```{r}
+# Vendo o resumo da variável
+summary(pseudo_face$year_joined)
+
+# Vendo a distribuição de usuários a cada ano
+table(pseudo_face$year_joined)
+
+# Cortar a variável year_joined para criar 4 categorias: 2004-2009, 2009-2011, ...
+year_joined_with_4 <- cut(pseudo_face$year_joined, breaks = 4) # cria as partições automaticamente
+year_joined_with_4 <- cut(pseudo_face$year_joined, c(2004, 2009, 2011, 2012, 2014)) # cria as partições que especifiquei
+table(year_joined_with_4)
+```
+
+Video: Plotting It All Together
+```{r}
+# Criar um gráfico de linhas para a variável year_joined_with_4
+ggplot(aes(x = age, y = friend_count),
+              data = pseudo_face) +
+  geom_line(aes(color = year_joined_with_4), stat = 'summary', fun.y = median)
+```
+
+Video: Plot the Grand Mean
+```{r}
+# Write code to do the following:
+
+# (1) Add another geom_line to code below
+# to plot the grand mean of the friend count vs age.
+
+# (2) Exclude any users whose year_joined.bucket is NA.
+
+# (3) Use a different line type for the grand mean.
+
+# As a reminder, the parameter linetype can take the values 0-6:
+
+# 0 = blank, 1 = solid, 2 = dashed
+# 3 = dotted, 4 = dotdash, 5 = longdash
+# 6 = twodash
+
+ggplot(aes(x = age, y = friend_count),
+              data = pseudo_face) +
+  geom_line(aes(color = year_joined_with_4), stat = 'summary', fun.y = mean) +
+  geom_line(stat = 'summary', fun.y = mean, linetype=2) # A linha da média geral
+```
+
+Video: Friending Rate (taxa0)
+```{r}
+# Mostrar quantos amigos os usuários tem para cada dia em que usaram o Facebook
+# Queremos um resumo da taxa de amigos
+# Considerar apenas os amigos com mais de um dia
+with(subset(pseudo_face, tenure >= 1), summary(friend_count / tenure))
+```
+
+Video: Friendships Initiated Ver, EM CASA
+```{r}
+# Criar um gráfico de amizades iniciadas por dias de duração, usando as variáveis age, tenure, friendships_initiated e year_joined_with_4
+ggplot(aes(x = tenure, y = (friendships_initiated/tenure)),
+              data = subset(pseudo_face, tenure >= 1)) +
+  geom_line(aes(color = year_joined_with_4), stat='summary', fun.y = mean)
+
+# CODIGO COPIADO DO VIDEO
+ggplot(aes(x = 7 * round(tenure / 7), y = friendships_initiated / tenure),
+       data = subset(pseudo_face, tenure > 0)) +
+  geom_line(aes(color = year_joined_with_4),
+            stat = "summary",
+            fun.y = mean)
+```
+
+VIDEO: Bias Variance Trade off Revisited
+```{r}
+# Quero tirar o ruído do gráfico anterior -> ajusto o eixo x
+ggplot(aes(x = 7 * round(tenure/7), y = (friendships_initiated/tenure)),
+              data = subset(pseudo_face, tenure >= 1)) +
+  geom_line(aes(color = year_joined_with_4), stat='summary', fun.y = mean)
+
+ggplot(aes(x = 7 * round(tenure / 7), y = friendships_initiated / tenure),
+       data = subset(pseudo_face, tenure > 0)) +
+  geom_line(aes(color = year_joined_with_4),
+            stat = "summary",
+            fun.y = mean)
+```
+
+Video: Histograms
+```{r}
+
+# Cada linha representa uma compra de yogurt
+yo <- read.csv('yogurt.csv')
+str(yo)
+
+# Criando id e Convertendo a variável para um fator
+yo$id <- factor(yo$id)
+str(yo)
+
+# Criando um Histograma
+qplot(data = yo, x = price, fill = I('pink'))
+
+# Para diminuir os espaços em branco
+qplot(data = yo, x = price, fill = I('pink'), binwidth=10)
+
+```
+
+Video: Number
+```{r}
+# Create a new variable called all.purchases,
+# which gives the total counts of yogurt for
+# each observation or household.
+
+# A função transform combina variáveis que já estão na estrutura de dados nela mesma
+# A nova variável é igual a soma de todos os sabores de yogurt
+yo <- transform(yo, all_purchases = strawberry + blueberry + pina.colada + plain + mixed.berry)
+```
+
+Video: Prices Over Time
+```{r}
+# Criar um gráfico de dispersão
+ggplot(aes(x = time, y = price), data = yo) +
+  geom_jitter(alpha=1/4, fill=I('orange'))
+ 
+```
+
+Video: Looking at Samples
+```{r}
+# Analisar uma amostra das famílias (16 famílias) para se ter uma ideia geral do que está acontecendo
+set.seed(4230)
+sample.ids <- sample(levels(yo$id), 16)
+ 
+ggplot(aes(x = time, y = price), 
+       data = subset(yo, id %in% sample.ids)) + # executa um loop nos ids
+  facet_wrap( ~ id) +
+  geom_line() +
+  geom_point(aes(size=all_purchases), pch=1)
+```
+
+Video: Scatterplot Matrices
+```{r}
+# Criar uma série de gráficos de dispersão automaticamente, uma matriz de gráficos 
+# Cria um gráfico de dispersão para cada par de variáveis
+
+install.packages('GGally')
+library(GGally)
+theme_set(theme_minimal(20)) # definição do theme
+
+set.seed(1831) # definição da amostra
+pseudo_face_subset <- pseudo_face[, c(2: 15)] # pegando as colunas 2 a 15
+
+names(pseudo_face)
+names(pseudo_face_subset)
+
+# Criação da matriz
+ggpairs(pseudo_face_subset[sample.int(nrow(pseudo_face_subset), 1000), ])
+
+```
+
+Video: Heat Maps (Mapas de calor)
+```{r}
+
+nci <- read.csv('nci.tsv')
+head(nci)
+# Mudando os nomes das colunas
+colnames(nci) <- c(1:64)
+
+# transformando os dados para formato longo
+install.packages("reshape2")
+library(reshape2)
+nci_long_samp <- melt(as.matrix(nci[1:200, ])) # mostrando os 200 primeiros genes
+
+names(nci_long_samp) <- c('gene', 'case', 'value')
+head(nci_long_samp)
+
+# criando o mapa de calor
+ggplot(aes(x = gene, y = case, fill = value), data = nci_long_samp) +
+  geom_tile() + 
+  scale_fill_gradientn(colours = colorRampPalette(c('blue', 'red'))(100)) # nos dá um gradiente
+  
+```
