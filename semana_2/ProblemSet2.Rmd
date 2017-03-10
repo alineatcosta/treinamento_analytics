@@ -1,0 +1,91 @@
+
+Quiz: Price Histograms with Facet and Color
+```{r}
+# Create a histogram of diamond prices.
+# Facet the histogram by diamond color
+# and use cut to color the histogram bars.
+
+# The plot should look something like this.
+# http://i.imgur.com/b5xyrOu.jpg
+
+# Note: In the link, a color palette of type
+# 'qual' was used to color the histogram using
+# scale_fill_brewer(type = 'qual')
+
+qplot(data = subset(diamonds, price < 15000), x = price, fill = cut, binwidth=30) +
+    scale_fill_brewer(type = 'qual') + 
+    facet_wrap(~color, ncol = 3) # dividindo os gráficos pela variável 'color'
+
+```
+
+Quiz: Price vs. Table Colored by Cut
+```{r}
+# Create a scatterplot of diamond price vs.
+# table and color the points by the cut of
+# the diamond.
+
+# The plot should look something like this.
+# http://i.imgur.com/rQF9jQr.jpg
+
+ggplot(aes(x = table, y = price),
+              data = subset(diamonds, table < 80)) +
+      geom_point(aes(color = cut)) +
+      scale_fill_brewer(type = 'qual') 
+```
+
+Quiz: Price vs. Volume and Diamond Clarity
+```{r}
+# Create a scatterplot of diamond price vs.
+# volume (x * y * z) and color the points by
+# the clarity of diamonds. Use scale on the y-axis
+# to take the log10 of price. You should also
+# omit the top 1% of diamond volumes from the plot.
+
+# Note: Volume is a very rough approximation of
+# a diamond's actual volume.
+
+diamonds$volume <- (diamonds$x * diamonds$y * diamonds$z)
+
+ggplot(aes(x = volume, y = log10(price)),
+              data = subset(diamonds, table < 80)) +
+      geom_point(aes(color = clarity)) +
+      scale_color_brewer(type = 'div') + 
+      xlim(0, quantile(diamonds$diamonds, 0.99)) +
+      scale_x_continuous(breaks = seq(0, 300, 100), lim=c(0, 300)) 
+```
+
+Quiz: Proportion of Friendships Initiated
+```{r}
+pseudo_face <- read.csv('pseudo_facebook.tsv', sep = '\t')
+names(pseudo_face)
+
+# Se pseudo_face$friend_count == 0, a variável recebe '0', c. c., recebe o valor da proporção
+pseudo_face$prop_initiated <- ifelse(pseudo_face$friend_count == 0, 0, (pseudo_face$friendships_initiated/pseudo_face$friend_count))
+```
+
+Quiz: prop_initiated vs. tenure
+```{r}
+# Create a line graph of the median proportion of
+# friendships initiated ('prop_initiated') vs.
+# tenure and color the line segment by
+# year_joined.bucket.
+
+# Recall, we created year_joined.bucket in Lesson 5
+# by first creating year_joined from the variable tenure.
+# Then, we used the cut function on year_joined to create
+# four bins or cohorts of users.
+
+# (2004, 2009]
+# (2009, 2011]
+# (2011, 2012]
+# (2012, 2014]
+
+pseudo_face$year_joined <- floor(2014 - pseudo_face$tenure/365) # arredondando
+year_joined_with_4 <- cut(pseudo_face$year_joined, c(2004, 2009, 2011, 2012, 2014)) # cria as partições que especifiquei
+
+# CRIAR COM A MÉDIA
+ggplot(aes(x = prop_initiated, y = tenure),
+              data = pseudo_face) +
+      geom_line(aes(color = year_joined_with_4)) 
+```
+
